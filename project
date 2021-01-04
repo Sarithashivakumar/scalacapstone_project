@@ -1,0 +1,112 @@
+class capstoneproject
+{
+  import java.sql._
+  import java.io.{BufferedWriter, File, FileWriter}
+  import java.sql.{Connection, DriverManager}
+
+  def databasecsv(){
+    // jdbc driver name and database URL
+    val JDBC_DRIVER = "com.mysql.jdbc.Driver"
+    val DB_URL      = "jdbc:mysql://localhost:3306/test"
+    // database credentials
+    val USER = "root"
+    val PASS = "password"
+    var conn: Connection = null
+    var stmt: Statement = null
+    try {
+
+      Class.forName(JDBC_DRIVER)
+      conn = DriverManager.getConnection(DB_URL, USER, PASS)
+      stmt = conn.createStatement
+      stmt.execute("truncate test.data");
+      // Inserting contents of csv file into new table
+      val bufferedSource = io.Source.fromFile("/Users/saritha.shivakumar/Downloads/adult_data.csv")
+      for (line <- bufferedSource.getLines) {
+        println(line)
+        val cols = line.split(",").map(_.trim)
+        stmt.execute("INSERT INTO test.data (age,workclass,fnlwgt,education,education_num,marital_status,occupation,relationship,race,sex,capital_gain,capital_loss,hours_per_week,native_country,income)"
+          + s"VALUES ( '${cols(0)}' ,'" + cols(1) + "','" + cols(2) + "','" + cols(3) + "','" + cols(4) + "','" + cols(5) + "','" + cols(6) + "','" + cols(7) + "','" + cols(8) + "','" + cols(9) + "','" + cols(10) + "','" + cols(11) + "','" + cols(12) + "','" + cols(13) + "','" + cols(14) + "')");
+      }
+      bufferedSource.close
+    } catch {
+      case se: SQLException => se.printStackTrace
+      case e:  Exception => e.printStackTrace
+    } finally {
+      try {
+        if (stmt!=null) stmt.close
+      } catch {
+        case se2: SQLException => // nothing we can do
+      }
+      try {
+        if (conn!=null) conn.close
+      } catch {
+        case se: SQLException => se.printStackTrace
+      } //end finally-try
+    } //end try
+  }
+  // reading 100 records from the table and writing 100 records to a new output location in the form of csv
+  def readwritecsv() {
+    // connect to the database named "mysql" on port 8889 of localhost
+    val url = "jdbc:mysql://localhost:3306/test"
+    val driver = "com.mysql.jdbc.Driver"
+    val username = "root"
+    val password = "password"
+    var connection: Connection = null
+    val query =
+      """select *
+      from test.data
+      limit 100"""
+    // Creating new location to write 100 records
+    val file = "/Users/saritha.shivakumar/Desktop/test/adult_data1.csv"
+    new File(file).delete()
+
+    val writer = new BufferedWriter(new FileWriter("/Users/saritha.shivakumar/Desktop/test/adult_data1.csv", true))
+
+    try {
+      Class.forName(driver)
+      connection = DriverManager.getConnection(url, username, password)
+      val statement = connection.createStatement
+      val rs = statement.executeQuery(query)
+      while (rs.next) {
+        val age = rs.getString("age")
+        val workclass = rs.getString("workclass")
+        val fnlwgt = rs.getString("fnlwgt")
+        val education = rs.getString("education")
+        val education_num = rs.getString("education_num")
+        val marital_status = rs.getString("marital_status")
+        val occupation = rs.getString("occupation")
+        val relationship = rs.getString("relationship")
+        val race = rs.getString("race")
+        val sex = rs.getString("sex")
+        val capital_gain = rs.getString("capital_gain")
+        val capital_loss = rs.getString("capital_loss")
+        val hours_per_week = rs.getString("hours_per_week")
+        val native_country = rs.getString("native_country")
+        val income = rs.getString("income")
+        println("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s".format(age, workclass, fnlwgt, education, education_num, marital_status, occupation, relationship, race, sex, capital_gain, capital_loss, hours_per_week, native_country, income))
+        writer.write("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s%n".format(age, workclass, fnlwgt, education, education_num, marital_status, occupation, relationship, race, sex, capital_gain, capital_loss, hours_per_week, native_country, income))
+
+      }
+      writer.close()
+    }
+
+    catch {
+      case e: Exception => e.printStackTrace()
+
+        connection.close()
+    }
+
+  }
+}
+// singleton object
+object capstoneproject
+{
+  def main(args: Array[String])
+  {
+
+    // Creating object of sara class
+    var obj = new capstoneproject();
+    obj.databasecsv();
+    obj.readwritecsv();
+  }
+}
